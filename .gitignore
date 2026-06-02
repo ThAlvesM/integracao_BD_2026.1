@@ -1,0 +1,17 @@
+# Arquivos temporários do Python e Jupyter Notebooks
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# Arquivos ocultos do VS Code e do sistema operacional
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Variáveis de ambiente seguras
+.env
+
+# Virtual Environment
+venv/
+.venv/

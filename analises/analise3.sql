@@ -1,2 +1,0 @@
--- Arquivo com consulta de SQL 
--- Trocar o nome do arquivo quando decidir a consulta
