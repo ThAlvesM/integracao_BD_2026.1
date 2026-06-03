@@ -1,6 +1,10 @@
 # integracao_BD_2026.1
 Projeto de Integração da cadeira de  Banco de Dados usando PostgreSQL
 
+# criar e desligar docker 
+docker compose up -d
+docker compose down
+
 ## 📚 Referências
 
 - [Dados Abertos Governo](https://dadosabertos.saude.gov.br/dataset/hospitais-e-leitos)

@@ -1,5 +1,3 @@
-ersion: '3.8'
-
 services:
   banco-dados:
     image: postgres:15
