@@ -1,6 +1,7 @@
 -- Dimensão geográfica (região, UF, município)
 
-CREATE OR REPLACE VIEW elt.vw_dim_localidade AS
+DROP TABLE IF EXISTS elt.dim_localidade;
+CREATE TABLE elt.dim_localidade AS
 SELECT
     ROW_NUMBER() OVER (ORDER BY regiao, uf, municipio) AS id_localidade,
     regiao,

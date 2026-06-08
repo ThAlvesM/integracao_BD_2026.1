@@ -1,7 +1,7 @@
--- 02_dim_estabelecimento_saude.sql
 -- Dimensão dos estabelecimentos de saúde
 
-CREATE OR REPLACE VIEW elt.vw_dim_estabelecimento_saude AS
+DROP TABLE IF EXISTS elt.dim_estabelecimento_saude;
+CREATE TABLE elt.dim_estabelecimento_saude AS
 SELECT
     ROW_NUMBER() OVER (
         ORDER BY cnes, nome_estabelecimento, razao_social,

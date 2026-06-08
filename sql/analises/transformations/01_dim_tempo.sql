@@ -1,6 +1,7 @@
 -- Dimensão temporal derivada da coluna COMP (formato AAAAMM)
 
-CREATE OR REPLACE VIEW elt.vw_dim_tempo AS
+DROP TABLE IF EXISTS elt.dim_tempo;
+CREATE TABLE elt.dim_tempo AS
 SELECT
     ROW_NUMBER() OVER (ORDER BY competencia) AS id_tempo,
     competencia,
