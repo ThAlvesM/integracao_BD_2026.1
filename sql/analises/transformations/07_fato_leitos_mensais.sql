@@ -1,7 +1,7 @@
 -- Tabela fato — chaves substitutas + métricas de leitos e UTIs
 
 DROP TABLE IF EXISTS elt.fato_leitos_mensais;
-CREATE OR REPLACE TABLE elt.fato_leitos_mensais AS
+CREATE TABLE elt.fato_leitos_mensais AS
 SELECT
 
     -- ── Chaves substitutas ────────────────────────────────────────────────

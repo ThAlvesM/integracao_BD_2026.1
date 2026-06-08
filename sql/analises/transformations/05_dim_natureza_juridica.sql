@@ -1,7 +1,7 @@
 -- Dimensão da natureza jurídica do estabelecimento
 
 DROP TABLE IF EXISTS elt.dim_natureza_juridica;
-CREATE OR REPLACE TABLE elt.dim_natureza_juridica AS
+CREATE TABLE elt.dim_natureza_juridica AS
 SELECT
     ROW_NUMBER() OVER (ORDER BY natureza_juridica, desc_natureza_juridica) AS id_natureza_juridica,
     natureza_juridica,
