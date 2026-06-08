@@ -1,16 +1,20 @@
--- Dimensão dos estabelecimentos de saúde
+-- Dimensão dos estabelecimentos de saúde (agora incluindo atributos de localidade)
 
 DROP TABLE IF EXISTS elt.dim_estabelecimento_saude;
 CREATE TABLE elt.dim_estabelecimento_saude AS
 SELECT
     ROW_NUMBER() OVER (
         ORDER BY cnes, nome_estabelecimento, razao_social,
+                 regiao, uf, municipio,
                  logradouro, num_endereco, no_complemento,
                  bairro, cep, telefone, email
     ) AS id_estabelecimento,
     cnes,
     nome_estabelecimento,
     razao_social,
+    regiao,
+    uf,
+    municipio,
     logradouro,
     num_endereco,
     no_complemento,
@@ -23,6 +27,9 @@ FROM (
         cnes,
         nome_estabelecimento,
         razao_social,
+        regiao,
+        uf,
+        municipio,
         logradouro,
         num_endereco,
         no_complemento,
@@ -33,6 +40,7 @@ FROM (
     FROM elt.vw_staging
     ORDER BY
         cnes, nome_estabelecimento, razao_social,
+        regiao, uf, municipio,
         logradouro, num_endereco, no_complemento,
         bairro, cep, telefone, email
 ) e;

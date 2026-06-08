@@ -7,7 +7,6 @@ SELECT
     -- ── Chaves substitutas ────────────────────────────────────────────────
     t.id_tempo,
     e.id_estabelecimento,
-    l.id_localidade,
     tu.id_tipo_unidade,
     nj.id_natureza_juridica,
     g.id_gestao,
@@ -31,15 +30,18 @@ SELECT
 FROM elt.vw_staging s
 
 -- Join na dimensão tempo (chave: competencia)
-LEFT JOIN elt.vw_dim_tempo t
+LEFT JOIN elt.dim_tempo t
     ON s.competencia = t.competencia
 
--- Join na dimensão estabelecimento (chave composta, igual ao merge do ETL)
-LEFT JOIN elt.vw_dim_estabelecimento_saude e
+-- Join na dimensão estabelecimento (absorvendo atributos de localidade)
+LEFT JOIN elt.dim_estabelecimento_saude e
     ON  s.cnes                = e.cnes
     AND s.nome_estabelecimento = e.nome_estabelecimento
     AND s.razao_social         = e.razao_social
-    AND s.no_logradouro        = e.no_logradouro
+    AND s.regiao               = e.regiao
+    AND s.uf                   = e.uf
+    AND s.municipio            = e.municipio
+    AND s.logradouro           = e.logradouro  -- Corrigido de no_logradouro para logradouro
     AND s.num_endereco         = e.num_endereco
     AND s.no_complemento       = e.no_complemento
     AND s.bairro               = e.bairro
@@ -47,25 +49,17 @@ LEFT JOIN elt.vw_dim_estabelecimento_saude e
     AND s.telefone             = e.telefone
     AND s.email                = e.email
 
--- Join na dimensão localidade (chave composta)
-LEFT JOIN elt.vw_dim_localidade l
-    ON  s.regiao    = l.regiao
-    AND s.uf        = l.uf
-    AND s.municipio = l.municipio
-
 -- Join na dimensão tipo de unidade
-LEFT JOIN elt.vw_dim_tipo_unidade tu
+LEFT JOIN elt.dim_tipo_unidade tu
     ON  s.cod_tipo_unidade = tu.cod_tipo_unidade
     AND s.desc_tipo_unidade = tu.desc_tipo_unidade
 
 -- Join na dimensão natureza jurídica
-LEFT JOIN elt.vw_dim_natureza_juridica nj
+LEFT JOIN elt.dim_natureza_juridica nj
     ON  s.natureza_juridica      = nj.natureza_juridica
     AND s.desc_natureza_juridica  = nj.desc_natureza_juridica
 
 -- Join na dimensão gestão
-LEFT JOIN elt.vw_dim_gestao g
+LEFT JOIN elt.dim_gestao g
     ON  s.tipo_gestao      = g.tipo_gestao
     AND s.descricao_gestao IS NOT DISTINCT FROM g.descricao_gestao;
-    -- IS NOT DISTINCT FROM trata NULL = NULL como TRUE,
-    -- necessário pois descricao_gestao pode ser NULL para tp_gestao fora do domínio
