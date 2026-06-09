@@ -1,7 +1,5 @@
--- Dimensão dos estabelecimentos de saúde (agora incluindo atributos de localidade)
+{{ config(materialized='table') }}
 
-DROP TABLE IF EXISTS elt.dim_estabelecimento_saude;
-CREATE TABLE elt.dim_estabelecimento_saude AS
 SELECT
     ROW_NUMBER() OVER (
         ORDER BY cnes, nome_estabelecimento, razao_social,
@@ -24,23 +22,14 @@ SELECT
     email
 FROM (
     SELECT DISTINCT
-        cnes,
-        nome_estabelecimento,
-        razao_social,
-        regiao,
-        uf,
-        municipio,
-        logradouro,
-        num_endereco,
-        no_complemento,
-        bairro,
-        cep,
-        telefone,
-        email
-    FROM elt.vw_staging
+        cnes, nome_estabelecimento, razao_social,
+        regiao, uf, municipio,
+        logradouro, num_endereco, no_complemento,
+        bairro, cep, telefone, email
+    FROM {{ ref('vw_staging') }}
     ORDER BY
         cnes, nome_estabelecimento, razao_social,
         regiao, uf, municipio,
         logradouro, num_endereco, no_complemento,
         bairro, cep, telefone, email
-) e;
+) e

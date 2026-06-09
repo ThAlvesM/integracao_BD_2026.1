@@ -1,7 +1,5 @@
--- Tabela fato — chaves substitutas + métricas de leitos e UTIs
 
-DROP TABLE IF EXISTS elt.fato_leitos_mensais;
-CREATE TABLE elt.fato_leitos_mensais AS
+
 SELECT
 
     -- ── Chaves substitutas ────────────────────────────────────────────────
@@ -11,7 +9,7 @@ SELECT
     nj.id_natureza_juridica,
     g.id_gestao,
 
-    -- ── Métricas (METRICAS_LEITOS do ETL) ────────────────────────────────
+    -- ── Métricas ─────────────────────────────────────────────────────────
     s.leitos_existentes,
     s.leitos_sus,
     s.uti_total_exist,
@@ -27,21 +25,19 @@ SELECT
     s.uti_coronariana_exist,
     s.uti_coronariana_sus
 
-FROM elt.vw_staging s
+FROM "projeto"."elt"."vw_staging" s
 
--- Join na dimensão tempo (chave: competencia)
-LEFT JOIN elt.dim_tempo t
+LEFT JOIN "projeto"."elt_elt"."dim_tempo" t
     ON s.competencia = t.competencia
 
--- Join na dimensão estabelecimento (absorvendo atributos de localidade)
-LEFT JOIN elt.dim_estabelecimento_saude e
-    ON  s.cnes                = e.cnes
+LEFT JOIN "projeto"."elt_elt"."dim_estabelecimento_saude" e
+    ON  s.cnes                 = e.cnes
     AND s.nome_estabelecimento = e.nome_estabelecimento
     AND s.razao_social         = e.razao_social
     AND s.regiao               = e.regiao
     AND s.uf                   = e.uf
     AND s.municipio            = e.municipio
-    AND s.logradouro           = e.logradouro  -- Corrigido de no_logradouro para logradouro
+    AND s.logradouro           = e.logradouro
     AND s.num_endereco         = e.num_endereco
     AND s.no_complemento       = e.no_complemento
     AND s.bairro               = e.bairro
@@ -49,17 +45,14 @@ LEFT JOIN elt.dim_estabelecimento_saude e
     AND s.telefone             = e.telefone
     AND s.email                = e.email
 
--- Join na dimensão tipo de unidade
-LEFT JOIN elt.dim_tipo_unidade tu
-    ON  s.cod_tipo_unidade = tu.cod_tipo_unidade
+LEFT JOIN "projeto"."elt_elt"."dim_tipo_unidade" tu
+    ON  s.cod_tipo_unidade  = tu.cod_tipo_unidade
     AND s.desc_tipo_unidade = tu.desc_tipo_unidade
 
--- Join na dimensão natureza jurídica
-LEFT JOIN elt.dim_natureza_juridica nj
+LEFT JOIN "projeto"."elt_elt"."dim_natureza_juridica" nj
     ON  s.natureza_juridica      = nj.natureza_juridica
-    AND s.desc_natureza_juridica  = nj.desc_natureza_juridica
+    AND s.desc_natureza_juridica = nj.desc_natureza_juridica
 
--- Join na dimensão gestão
-LEFT JOIN elt.dim_gestao g
+LEFT JOIN "projeto"."elt_elt"."dim_gestao" g
     ON  s.tipo_gestao      = g.tipo_gestao
-    AND s.descricao_gestao IS NOT DISTINCT FROM g.descricao_gestao;
+    AND s.descricao_gestao IS NOT DISTINCT FROM g.descricao_gestao

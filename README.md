@@ -31,19 +31,25 @@ integracao_BD_2026.1/
 │
 ├── transformacao_leitos/
 │   ├── analises/
-│   │   ├── municipio_mais_leitos_sus_2024.sql
-│   │   ├── media_leitos_por_uf.sql
-│   │   └── uf_mais_uti_sus_nordeste_2023.sql
+│   │   ├── analise1.sql
+│   │   ├── analise2.sql
+│   │   └── analise3.sql
 │   │
-│   └── transformations/
-│       ├── 00_staging.sql
-│       ├── 01_dim_tempo.sql
-│       ├── 02_dim_estabelecimento_saude.sql
-│       ├── 03_dim_tipo_unidade.sql
-│       ├── 04_dim_natureza_juridica.sql
-│       ├── 05_dim_gestao.sql
-│       └── 06_fato_leitos_mensais.sql
+│   ├── models/
+│   │   ├── staging/
+│   │   │   └── vw_staging.sql
+│   │   └── marts/
+│   │       ├── dim_tempo.sql
+│   │       ├── dim_estabelecimento_saude.sql
+│   │       ├── dim_tipo_unidade.sql
+│   │       ├── dim_natureza_juridica.sql
+│   │       ├── dim_gestao.sql
+│   │       └── fato_leitos_mensais.sql
+│   │
+│   ├── dbt_project.yml
+│   └── profiles.yml
 │
+├── profiles_exemplo.yml
 ├── .env_exemplo
 ├── .gitignore
 ├── docker-compose.yml
@@ -131,25 +137,29 @@ O processo ELT separa claramente as responsabilidades:
    - Carregamento direto no PostgreSQL, schema `leitos_raw`, tabela `leitos_bruto`
    - 255.843 registros carregados em lotes de 10.000 (`chunksize=10_000`)
 
-2. **Transformação via SQL** (`transformacao_leitos/transformations/`):
-   - `00_staging.sql`: view `elt.vw_staging` — limpeza, padronização e derivação de campos
-   - `01_dim_tempo.sql` a `05_dim_gestao.sql`: materialização das 5 dimensões como tabelas
-   - `06_fato_leitos_mensais.sql`: materialização da tabela fato com joins nas dimensões
+2. **Transformação via DBT** (`transformacao_leitos/`):
+   - `models/staging/vw_staging.sql`: view de limpeza, padronização e derivação de campos
+   - `models/marts/dim_*.sql`: materialização das 5 dimensões como tabelas
+   - `models/marts/fato_leitos_mensais.sql`: materialização da tabela fato com joins nas dimensões
+   - O DBT resolve automaticamente a ordem de execução pelos relacionamentos entre models
 
 ## 🛠️ Tecnologias Utilizadas
 
 - **Python 3.13**: Linguagem principal para os pipelines
 - **Pandas**: Manipulação e transformação de dados
 - **SQLAlchemy 2.x**: Conexão com o banco de dados
-- **PostgreSQL 18**: Sistema gerenciador de banco de dados
+- **PostgreSQL 15**: Sistema gerenciador de banco de dados
+- **dbt-postgres 1.9.0**: Transformação e materialização dos models no Data Warehouse
 - **Docker**: Containerização do banco de dados
 - **Jupyter Notebook**: Ambiente de desenvolvimento interativo
 
 ## 📦 Dependências
 
 ```bash
-pip install pandas sqlalchemy psycopg2-binary python-dotenv
+pip install pandas sqlalchemy psycopg2-binary python-dotenv dbt-postgres==1.9.0
 ```
+
+> ⚠️ Não instale `dbt-core` diretamente. O `dbt-postgres==1.9.0` já instala a versão compatível do core automaticamente. Versões 2.x do dbt-core (dbt Fusion) ainda não suportam PostgreSQL.
 
 ## ⚙️ Configuração e Instalação
 
@@ -165,9 +175,28 @@ DB_PORT=5432
 DB_NAME=projeto
 ```
 
-> ⚠️ Se a senha contiver caracteres especiais ou acentos, use `urllib.parse.quote_plus()` ao montar a connection string.
+### 2. Configurar o profiles.yml
 
-### 2. Opção A — Subir com Docker
+Copie o `profiles_exemplo.yml` para dentro da pasta `transformacao_leitos/` e renomeie para `profiles.yml`, preenchendo com suas credenciais:
+
+```yaml
+transformacao_leitos:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: seu_usuario
+      password: "sua_senha"
+      port: 5432
+      dbname: nome_do_banco
+      schema: elt
+      threads: 4
+```
+
+> ⚠️ O `profiles.yml` está no `.gitignore` — nunca suba suas credenciais para o repositório.
+
+### 3. Opção A — Subir com Docker
 
 ```bash
 # Iniciar o container PostgreSQL
@@ -180,9 +209,7 @@ docker ps
 docker compose down
 ```
 
-O pgAdmin pode ser acessado em `http://localhost:5050` (se configurado no compose).
-
-### 3. Opção B — PostgreSQL Local
+### 4. Opção B — PostgreSQL Local
 
 Certifique-se de ter o PostgreSQL instalado e em execução. Crie o banco manualmente:
 
@@ -216,32 +243,58 @@ SELECT COUNT(*) FROM leitos_raw.leitos_bruto;
 -- Esperado: 255.843 registros
 ```
 
-**Passo 2 — Executar as transformações SQL na ordem:**
+**Passo 2 — Executar as transformações com DBT:**
 
-Execute os arquivos em `transformacao_leitos/transformations/` no pgAdmin ou via `psql`, **nesta ordem**:
+```bash
+cd transformacao_leitos
 
-```sql
--- 1. View de staging (deve existir antes de tudo)
-\i transformacao_leitos/transformations/00_staging.sql
+# Verificar conexão com o banco
+dbt debug
 
--- 2. Dimensões (podem ser executadas em qualquer ordem entre si)
-\i transformacao_leitos/transformations/01_dim_tempo.sql
-\i transformacao_leitos/transformations/02_dim_estabelecimento_saude.sql
-\i transformacao_leitos/transformations/03_dim_tipo_unidade.sql
-\i transformacao_leitos/transformations/04_dim_natureza_juridica.sql
-\i transformacao_leitos/transformations/05_dim_gestao.sql
+# Executar todos os models
+dbt run
 
--- 3. Fato (deve ser executada por último)
-\i transformacao_leitos/transformations/06_fato_leitos_mensais.sql
+# Executar apenas a staging
+dbt run --select staging
+
+# Executar apenas as marts (dimensões + fato)
+dbt run --select marts
+```
+
+**Resultado esperado:**
+```
+Running with dbt=1.11.11
+Registered adapter: postgres=1.9.0
+Found 7 models, 474 macros
+
+Concurrency: 4 threads (target='dev')
+
+1 of 7 START sql view model elt.vw_staging .................. [RUN]
+1 of 7 OK created sql view model elt.vw_staging ............. [CREATE VIEW in 0.13s]
+2 of 7 START sql table model elt.dim_estabelecimento_saude .. [RUN]
+3 of 7 START sql table model elt.dim_gestao ................. [RUN]
+4 of 7 START sql table model elt.dim_natureza_juridica ...... [RUN]
+5 of 7 START sql table model elt.dim_tempo .................. [RUN]
+6 of 7 START sql table model elt.dim_tipo_unidade ........... [RUN]
+2 of 7 OK created sql table model elt.dim_estabelecimento_saude  [SELECT 11596 in 1.09s]
+3 of 7 OK created sql table model elt.dim_gestao ............ [SELECT 3 in 0.30s]
+4 of 7 OK created sql table model elt.dim_natureza_juridica . [SELECT 32 in 0.33s]
+5 of 7 OK created sql table model elt.dim_tempo ............. [SELECT 36 in 0.68s]
+6 of 7 OK created sql table model elt.dim_tipo_unidade ...... [SELECT 5 in 0.26s]
+7 of 7 START sql table model elt.fato_leitos_mensais ........ [RUN]
+7 of 7 OK created sql table model elt.fato_leitos_mensais ... [SELECT 255843 in 2.71s]
+
+Finished running 6 table models, 1 view model in 8.09s.
+Completed successfully. PASS=7 WARN=0 ERROR=0 SKIP=0 TOTAL=7
 ```
 
 ## 📊 Análises Disponíveis
 
-O projeto inclui três análises SQL na pasta `transformacao_leitos/analises/`:
+O projeto inclui três análises SQL na pasta `sql/analises/`:
 
 ### 1. Município com mais leitos SUS em 2024
 
-**Arquivo:** `municipio_mais_leitos_sus_2024.sql`
+**Arquivo:** `analise1.sql`
 
 Identifica o município brasileiro com maior oferta de leitos SUS no ano de 2024.
 
@@ -258,7 +311,7 @@ LIMIT 1;
 
 ### 2. Média de leitos existentes por UF
 
-**Arquivo:** `media_leitos_por_uf.sql`
+**Arquivo:** `analise2.sql`
 
 Calcula a média mensal de leitos existentes por Unidade Federativa, permitindo comparar a infraestrutura hospitalar entre estados.
 
@@ -277,7 +330,7 @@ ORDER BY AVG(leitos_municipio) DESC;
 
 ### 3. UF com mais UTIs SUS no Nordeste em 2023
 
-**Arquivo:** `uf_mais_uti_sus_nordeste_2023.sql`
+**Arquivo:** `analise3.sql`
 
 Identifica qual estado da Região Nordeste concentrou o maior número de leitos de UTI disponíveis ao SUS em 2023.
 
@@ -300,7 +353,7 @@ LIMIT 1;
 Campos como CNES, COMP e CEP são armazenados como texto com comprimento fixo, restaurando zeros à esquerda perdidos na leitura:
 
 | Campo | Comprimento | Exemplo original | Após tratamento |
-|-------|-------------|-----------------|-----------------|
+|-------|-------------|-----------------|-----------------| 
 | COMP | 6 | `202301.0` | `202301` |
 | CNES | 7 | `12345.0` | `0012345` |
 | CEP | 8 | `50000.0` | `00050000` |
@@ -346,14 +399,15 @@ Campos como CNES, COMP e CEP são armazenados como texto com comprimento fixo, r
 - Os dados são **públicos**, disponibilizados pelo DATASUS/Ministério da Saúde
 - O schema `leitos_raw` mantém os dados originais **inalterados**
 - O schema `elt` contém os dados **transformados e modelados**
-- Os arquivos SQL de transformação devem ser executados **na ordem numérica** (00 → 06)
-- O `00_staging.sql` cria uma **view**, não uma tabela — ela deve existir antes das demais
-- A senha do banco não deve conter acentos ou caracteres especiais para evitar `UnicodeDecodeError`
+- O DBT resolve automaticamente a ordem de execução — não é necessário rodar os models manualmente
+- O `profiles.yml` está no `.gitignore` — nunca suba suas credenciais para o repositório
+- Use `dbt-postgres==1.9.0` — versões 2.x (dbt Fusion) ainda não suportam PostgreSQL
 
 ## 📚 Referências
 
 - [Dados Abertos — Hospitais e Leitos (DATASUS)](https://dadosabertos.saude.gov.br/dataset/hospitais-e-leitos)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [DBT Documentation](https://docs.getdbt.com/)
 - [Pandas Documentation](https://pandas.pydata.org/docs/)
 - [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
 
@@ -374,6 +428,6 @@ Este projeto é desenvolvido para fins acadêmicos na disciplina de Banco de Dad
 
 ---
 
-**Tecnologias:** Python • PostgreSQL • Docker • Pandas • Jupyter
+**Tecnologias:** Python • PostgreSQL • DBT • Docker • Pandas • Jupyter
 
 **Período:** 2026.1

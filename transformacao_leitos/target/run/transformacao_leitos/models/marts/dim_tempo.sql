@@ -1,7 +1,15 @@
--- Dimensão temporal derivada da coluna COMP (formato AAAAMM)
 
-DROP TABLE IF EXISTS elt.dim_tempo;
-CREATE TABLE elt.dim_tempo AS
+  
+    
+
+  create  table "projeto"."elt_elt"."dim_tempo__dbt_tmp"
+  
+  
+    as
+  
+  (
+    
+
 SELECT
     ROW_NUMBER() OVER (ORDER BY competencia) AS id_tempo,
     competencia,
@@ -18,6 +26,8 @@ FROM (
         mes,
         nome_mes,
         trimestre
-    FROM elt.vw_staging
+    FROM "projeto"."elt"."vw_staging"
     ORDER BY competencia
-) t;
+) t
+  );
+  
