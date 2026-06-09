@@ -12,7 +12,7 @@ SELECT
     g.id_gestao,
 
     -- ── Métricas (METRICAS_LEITOS do ETL) ────────────────────────────────
-    s.leitos_exist,
+    s.leitos_existentes,
     s.leitos_sus,
     s.uti_total_exist,
     s.uti_total_sus,
