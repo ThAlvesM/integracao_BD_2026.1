@@ -47,9 +47,9 @@ integracao_BD_2026.1/
 │   │       └── fato_leitos_mensais.sql
 │   │
 │   ├── dbt_project.yml
+│   ├── profiles_exemplo.yml
 │   └── profiles.yml
 │
-├── profiles_exemplo.yml
 ├── .env_exemplo
 ├── .gitignore
 ├── docker-compose.yml

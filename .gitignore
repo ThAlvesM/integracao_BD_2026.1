@@ -19,3 +19,4 @@ venv/
 # DBT
 profiles.yml
 user.yml
+transformacao_leitos/target/graph_summary.json

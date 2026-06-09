@@ -2,7 +2,7 @@
   
     
 
-  create  table "projeto"."elt_elt"."dim_tempo__dbt_tmp"
+  create  table "projeto"."elt"."dim_tempo__dbt_tmp"
   
   
     as
