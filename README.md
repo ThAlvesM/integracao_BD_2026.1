@@ -52,7 +52,7 @@ O projeto implementa um modelo dimensional com as seguintes tabelas:
   - `id_tipo_unidade` (FK)
   - `id_natureza_juridica` (FK)
   - `id_gestao` (FK)  
-  - `leitos_exist`
+  - `leitos_existentes`
   - `leitos_sus`
   - `uti_total_exist`
   - `uti_total_sus`
