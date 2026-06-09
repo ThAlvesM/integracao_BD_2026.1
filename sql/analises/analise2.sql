@@ -1,4 +1,5 @@
 -- Média mensal de leitos existentes dos municípios de cada UF
+SELECT uf, AVG(leitos_municipio)
 FROM (
     SELECT e.uf, t.mes, t.ano, SUM(f.leitos_existentes) AS leitos_municipio
     FROM elt.fato_leitos_mensais f
