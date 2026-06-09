@@ -73,7 +73,7 @@ SELECT
     END AS nome_mes,
 
     -- ── MÉTRICAS (coerce para INT, nulo → 0, espelhando pd.to_numeric) ────
-    COALESCE(leitos_existentes::INT,     0) AS leitos_exist,
+    COALESCE(leitos_existentes::INT,     0) AS leitos_existentes,
     COALESCE(leitos_sus::INT,            0) AS leitos_sus,
     COALESCE(uti_total_exist::INT,       0) AS uti_total_exist,
     COALESCE(uti_total_sus::INT,         0) AS uti_total_sus,
