@@ -299,7 +299,7 @@ O projeto inclui três análises SQL na pasta `sql/analises/`:
 Identifica o município brasileiro com maior oferta de leitos SUS no ano de 2024.
 
 ```sql
-SELECT t.ano, e.municipio, SUM(f.leitos_sus)
+SELECT t.ano,e.uf, e.municipio, SUM(f.leitos_sus)
 FROM elt.fato_leitos_mensais f
 JOIN elt.dim_estabelecimento_saude e ON e.id_estabelecimento = f.id_estabelecimento
 JOIN elt.dim_tempo t ON t.id_tempo = f.id_tempo
