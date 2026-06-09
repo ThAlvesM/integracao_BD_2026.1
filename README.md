@@ -141,7 +141,7 @@ O processo ELT separa claramente as responsabilidades:
 - **Python 3.13**: Linguagem principal para os pipelines
 - **Pandas**: Manipulação e transformação de dados
 - **SQLAlchemy 2.x**: Conexão com o banco de dados
-- **PostgreSQL 15**: Sistema gerenciador de banco de dados
+- **PostgreSQL 18**: Sistema gerenciador de banco de dados
 - **Docker**: Containerização do banco de dados
 - **Jupyter Notebook**: Ambiente de desenvolvimento interativo
 
